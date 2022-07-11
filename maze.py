@@ -16,12 +16,16 @@ COL_OFFSET = {N: 0, E: 1, S: 0, W: -1}
 
 OPPOSITE = {N: S, E: W, S: N, W: E}
 
-# recursive backtracking
-def mazify_rec(grid: List[List[int]], row: int, col: int) -> None:
-    """Carve a maze into grid starting at (row, col)."""
-    row_count = len(grid)
-    col_count = len(grid[0])
+class Grid:
+    def __init__(self, row_count: int, col_count: int) -> None:
+        self.row_count = row_count
+        self.col_count = col_count
+        # 0 means the cell has no connections to neighbours yet
+        self.data = [[0] * col_count for _ in range(row_count)]
 
+# recursive backtracking
+def mazify_rec(grid: Grid, row: int, col: int) -> None:
+    """Carve a maze into grid starting at (row, col)."""
     # randomly carve through each wall of this cell as long as we've
     # not yet vistied the destination cell
     dirs = [N, E, S, W]
@@ -29,32 +33,30 @@ def mazify_rec(grid: List[List[int]], row: int, col: int) -> None:
     for d in dirs:
         next_row = row + ROW_OFFSET[d]
         next_col = col + COL_OFFSET[d]
-        if next_row >= 0 and next_row < row_count and \
-           next_col >= 0 and next_col < col_count and \
-           grid[next_row][next_col] == 0:
-            grid[row][col] |= d
-            grid[next_row][next_col] |= OPPOSITE[d]
+        if next_row >= 0 and next_row < grid.row_count and \
+           next_col >= 0 and next_col < grid.col_count and \
+           grid.data[next_row][next_col] == 0:
+            grid.data[row][col] |= d
+            grid.data[next_row][next_col] |= OPPOSITE[d]
             mazify_rec(grid, next_row, next_col)
 
-def mazify_kruskal(grid: List[List[int]]) -> None:
-    row_count = len(grid)
-    col_count = len(grid[0])
+def mazify_kruskal(grid: Grid) -> None:
     # generate all our edges
     edges = []
-    for row in range(row_count):
-        for col in range(col_count):
+    for row in range(grid.row_count):
+        for col in range(grid.col_count):
             for d in [N, E, S, W]:
                 other_row = row + ROW_OFFSET[d]
                 other_col = col + COL_OFFSET[d]
-                if other_row >= 0 and other_row < row_count and \
-                   other_col >= 0 and other_col < col_count:
+                if other_row >= 0 and other_row < grid.row_count and \
+                   other_col >= 0 and other_col < grid.col_count:
                     edges.append((row, col, d))
 
     # now we'll make an inline DSU/union-find for use in the actual algo
     # We'll identify cells with id == row*col_count + col
 
     # parent[i] points to the representative set for cell id i
-    parent = [i for i in range(row_count * col_count)] # cells start off disjoint
+    parent = [i for i in range(grid.row_count * grid.col_count)]
     def find_set(cell_id: int) -> int:
         if parent[cell_id] == cell_id:
             return cell_id
@@ -73,26 +75,24 @@ def mazify_kruskal(grid: List[List[int]]) -> None:
         row, col, d = edges.pop()
         other_row = row + ROW_OFFSET[d]
         other_col = col + COL_OFFSET[d]
-        set1 = find_set(row * col_count + col)
-        set2 = find_set(other_row * col_count + other_col)
+        set1 = find_set(row * grid.col_count + col)
+        set2 = find_set(other_row * grid.col_count + other_col)
         if set1 != set2:
             union_set(set1, set2)
-            grid[row][col] |= d
-            grid[other_row][other_col] |= OPPOSITE[d]
+            grid.data[row][col] |= d
+            grid.data[other_row][other_col] |= OPPOSITE[d]
 
-def print_maze(grid: List[List[int]]) -> None:
-    row_count = len(grid)
-    col_count = len(grid[0])
-    print(" ", "_" * (col_count * 2 - 1))
-    for row in range(row_count):
+def print_maze(grid: Grid) -> None:
+    print(" ", "_" * (grid.col_count * 2 - 1))
+    for row in range(grid.row_count):
         print("|", end="")
-        for col in range(col_count):
-            if grid[row][col] & S != 0:
+        for col in range(grid.col_count):
+            if grid.data[row][col] & S != 0:
                 print(" ", end="")
             else:
                 print("_", end="")
-            if grid[row][col] & E != 0:
-                if (grid[row][col] | grid[row][col+1]) & S != 0:
+            if grid.data[row][col] & E != 0:
+                if (grid.data[row][col] | grid.data[row][col+1]) & S != 0:
                     print(" ", end="")
                 else:
                     print("_", end="")
@@ -101,10 +101,8 @@ def print_maze(grid: List[List[int]]) -> None:
         print("")
 
 def main() -> None:
-    size = 20
-    # cell value of 0 means unvisited/"uncarved"
-    grid = [[0] * size for _ in range(size)]
-    # mazify_rec(grid, 0, 0)
+    grid = Grid(20, 20)
+    #mazify_rec(grid, 0, 0)
     mazify_kruskal(grid)
     print_maze(grid)
 
