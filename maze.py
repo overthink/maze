@@ -7,7 +7,7 @@ Mostly just messing around with typechecked python.
 from typing import *
 import random
 
-# Direction "flags". Used to indicate which edges of a grid cell have walls.
+# Direction "flags". Used to indicate which edges of a grid cell have openings.
 N, E, S, W = 1, 2, 4, 8
 
 # Yields the value to add to current row/col to go in a given direction.
