@@ -2,8 +2,12 @@
 # didn't want to depend on init since it takes a while
 
 .PHONY: run
-run: typecheck
+run: lint typecheck
 	venv/bin/python maze.py
+
+.PHONY: lint
+lint:
+	venv/bin/black maze.py
 
 .PHONY: typecheck
 typecheck:
@@ -19,7 +23,7 @@ init: virtualenv
 .PHONY: virtualenv
 virtualenv: venv/bin/activate
 	venv/bin/pip install -U pip
-	venv/bin/pip install mypy
+	venv/bin/pip install mypy black
 
 venv/bin/activate:
 	which virtualenv || pip install virtualenv
