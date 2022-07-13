@@ -2,7 +2,7 @@
 # didn't want to depend on init since it takes a while
 
 .PHONY: run
-run: lint typecheck
+run:
 	venv/bin/python maze.py
 
 .PHONY: lint
@@ -14,7 +14,7 @@ typecheck:
 	venv/bin/mypy maze.py
 
 .PHONY: test
-test: typecheck
+test: lint typecheck
 	venv/bin/python -m unittest *py
 
 .PHONY: init
